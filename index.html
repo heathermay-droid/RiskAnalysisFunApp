@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Risk Analysis Microservice</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        #root {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: #fff;
+        }
+        th, td {
+            border: 1px solid #dee2e6;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #e9ecef;
+        }
+        .totals {
+            font-weight: bold;
+            font-size: 1.1em;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root">Loading…</div>
+    <!-- Load React and ReactDOM from CDN -->
+    <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script>
+        // React functional component for displaying risk analysis
+        function RiskApp() {
+            const [rows, setRows] = React.useState([]);
+            const [totals, setTotals] = React.useState(null);
+            const [error, setError] = React.useState(null);
+
+            React.useEffect(() => {
+                fetch('/api/risks')
+                    .then((response) => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then((data) => {
+                        setRows(data.rows);
+                        setTotals(data.totals);
+                    })
+                    .catch((err) => {
+                        console.error(err);
+                        setError('Failed to load data');
+                    });
+            }, []);
+
+            if (error) {
+                return React.createElement('div', { className: 'error' }, error);
+            }
+            if (totals === null) {
+                return React.createElement('div', null, 'Loading…');
+            }
+
+            return React.createElement(
+                React.Fragment,
+                null,
+                [
+                    React.createElement('h1', { key: 'title' }, 'Risk Analysis'),
+                    React.createElement(
+                        'table',
+                        { key: 'table' },
+                        [
+                            React.createElement(
+                                'thead',
+                                { key: 'thead' },
+                                React.createElement(
+                                    'tr',
+                                    null,
+                                    [
+                                        React.createElement('th', { key: 'factor' }, 'Factor'),
+                                        React.createElement('th', { key: 'severity' }, 'Severity'),
+                                        React.createElement('th', { key: 'polly' }, 'Polly Score'),
+                                        React.createElement('th', { key: 'lisa' }, 'Lisa Score'),
+                                        React.createElement('th', { key: 'pollyW' }, 'Polly Weighted'),
+                                        React.createElement('th', { key: 'lisaW' }, 'Lisa Weighted'),
+                                    ]
+                                )
+                            ),
+                            React.createElement(
+                                'tbody',
+                                { key: 'tbody' },
+                                rows.map((row, idx) =>
+                                    React.createElement(
+                                        'tr',
+                                        { key: idx },
+                                        [
+                                            React.createElement('td', { key: 'factor' }, row.factor),
+                                            React.createElement('td', { key: 'severity' }, row.severity),
+                                            React.createElement('td', { key: 'polly' }, row.Polly),
+                                            React.createElement('td', { key: 'lisa' }, row.Lisa),
+                                            React.createElement('td', { key: 'pollyW' }, row.polly_weighted.toFixed(1)),
+                                            React.createElement('td', { key: 'lisaW' }, row.lisa_weighted.toFixed(1)),
+                                        ]
+                                    )
+                                )
+                            ),
+                        ]
+                    ),
+                    React.createElement(
+                        'div',
+                        { className: 'totals', key: 'totals' },
+                        `Polly Total Risk: ${totals.Polly.toFixed(1)} | Lisa Total Risk: ${totals.Lisa.toFixed(1)}`
+                    ),
+                ]
+            );
+        }
+
+        // Render the app
+        ReactDOM.render(
+            React.createElement(RiskApp, null),
+            document.getElementById('root')
+        );
+    </script>
+</body>
+</html>
